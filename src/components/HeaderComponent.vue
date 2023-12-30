@@ -1,15 +1,29 @@
 <script setup lang="ts">
 import type { IGuitar } from '@/interfaces/guitar.interface';
-import type { PropType } from 'vue';
+import { computed, type PropType } from 'vue';
 
-defineProps({
+const props = defineProps({
   cart: {
     type: Array as PropType<IGuitar[]>,
+    required: true
+  },
+  guitar: {
+    type: Object as PropType<IGuitar>,
     required: true
   }
 });
 
-defineEmits(['increase-quantity', 'decrease-quantity']);
+defineEmits([
+  'increase-quantity',
+  'decrease-quantity',
+  'add-to-cart',
+  'remove-product',
+  'clear-cart'
+]);
+
+const totalPay = computed(() => {
+  return props.cart.reduce((total, product) => total + product.quantity! * product.price, 0);
+});
 </script>
 
 <template>
@@ -68,14 +82,24 @@ defineEmits(['increase-quantity', 'decrease-quantity']);
                         </button>
                       </td>
                       <td>
-                        <button class="btn btn-danger" type="button">X</button>
+                        <button
+                          class="btn btn-danger"
+                          type="button"
+                          @click="$emit('remove-product', product.id)"
+                        >
+                          X
+                        </button>
                       </td>
                     </tr>
                   </tbody>
                 </table>
 
-                <p class="text-end">Total à pagar: <span class="fw-bold">$899</span></p>
-                <button class="btn btn-dark w-100 mt-3 p-2">Limpar Carrinho</button>
+                <p class="text-end">
+                  Total à pagar: <span class="fw-bold">${{ totalPay }}</span>
+                </p>
+                <button class="btn btn-dark w-100 mt-3 p-2" @click="$emit('clear-cart')">
+                  Limpar Carrinho
+                </button>
               </div>
             </div>
           </div>
@@ -85,14 +109,18 @@ defineEmits(['increase-quantity', 'decrease-quantity']);
 
       <div class="row mt-5">
         <div class="col-md-6 text-center text-md-start pt-5">
-          <h1 class="display-2 fw-bold">Modelo VAI</h1>
+          <h1 class="display-2 fw-bold">Modelo {{ guitar.name }}</h1>
           <p class="mt-5 fs-5 text-white">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Temporibus, possimus quibusdam
-            dolor nemo velit quo, fuga omnis, iure molestias optio tempore sint at ipsa dolorum odio
-            exercitationem eos inventore odit.
+            {{ guitar.description }}
           </p>
-          <p class="text-primary fs-1 fw-black">$399</p>
-          <button type="button" class="btn fs-4 bg-primary text-white py-2 px-5">Comprar</button>
+          <p class="text-primary fs-1 fw-black">${{ guitar.price }}</p>
+          <button
+            type="button"
+            class="btn fs-4 bg-primary text-white py-2 px-5"
+            @click="$emit('add-to-cart', guitar)"
+          >
+            Comprar
+          </button>
         </div>
       </div>
     </div>

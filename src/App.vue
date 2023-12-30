@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 
 import FooterComponent from './components/FooterComponent.vue';
 import GuitarItem from './components/GuitarItem.vue';
@@ -9,10 +9,34 @@ import { type IGuitar } from './interfaces/guitar.interface';
 
 const guitars = ref<IGuitar[]>([]);
 const cart = ref<IGuitar[]>([]);
+const guitar = ref<IGuitar>({
+  id: 0,
+  name: '',
+  image: '',
+  description: '',
+  price: 0,
+  quantity: 0
+});
+
+watch(
+  cart,
+  () => {
+    saveCartLocalStorage();
+  },
+  { deep: true }
+);
 
 onMounted(() => {
   guitars.value = guitarDB;
+  guitar.value = guitarDB[3];
+
+  const cartStorage = localStorage.getItem('cart');
+  if (cartStorage) cart.value = JSON.parse(cartStorage);
 });
+
+const saveCartLocalStorage = () => {
+  localStorage.setItem('cart', JSON.stringify(cart.value));
+};
 
 const addToCart = (guitar: IGuitar) => {
   const existProduct: number = cart.value.findIndex((product) => product.id === guitar.id);
@@ -38,13 +62,25 @@ const decreaseQuantity = (id: number) => {
 
   cart.value[index].quantity!--;
 };
+
+const removeProduct = (id: number) => {
+  cart.value = cart.value.filter((product) => product.id !== id);
+};
+
+const clearCart = () => {
+  cart.value = [];
+};
 </script>
 
 <template>
   <HeaderComponent
     :cart="cart"
+    :guitar="guitar"
     @increase-quantity="increaseQuantity"
     @decrease-quantity="decreaseQuantity"
+    @add-to-cart="addToCart"
+    @remove-product="removeProduct"
+    @clear-cart="clearCart"
   />
 
   <main class="container-xl mt-5">
